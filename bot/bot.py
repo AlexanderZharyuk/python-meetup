@@ -3,6 +3,7 @@ import os
 
 from enum import Enum
 
+import django
 from more_itertools import chunked
 
 from dotenv import load_dotenv
@@ -35,6 +36,12 @@ class ConversationPoints(Enum):
     PERFORMANCE_SPEAKERS = 5
     CHOOSE_PERFORMANCE_SPEAKER = 6
     QUESTION_FOR_SPEAKER = 7
+
+
+def setup_admin_panel() -> None:
+    os.environ.setdefault("DJANGO_SETTINGS_MODULE",
+                          "admin_panel.Meetup.settings")
+    django.setup()
 
 
 def start(update: Update, context: CallbackContext) -> int:
@@ -224,6 +231,9 @@ def cancel(update: Update, context: CallbackContext) -> int:
 
 def main() -> None:
     load_dotenv()
+    setup_admin_panel()
+    from admin_panel.Conference.models import Speaker, Performance
+
 
     telegram_bot_token = os.environ['TELEGRAM_BOT_TOKEN']
     updater = Updater(telegram_bot_token)
