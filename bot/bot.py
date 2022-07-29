@@ -225,7 +225,7 @@ def cancel(update: Update, context: CallbackContext) -> int:
 def main() -> None:
     load_dotenv()
 
-    telegram_bot_token = os.environ['TELEGRAM_BOT_KEY']
+    telegram_bot_token = os.environ['TELEGRAM_BOT_TOKEN']
     updater = Updater(telegram_bot_token)
 
     dispatcher = updater.dispatcher
