@@ -26,7 +26,8 @@ def start_block(update):
 
 
 def programs_block(update):
-    programs = [f'Программа №{program}' for program in range(1, 4)]
+    from admin_panel.Conference.models import Conference
+    programs = [conference.name_conf for conference in Conference.objects.all()]
     programs_text = [f"{program_number}. {program}\n" for
                      program_number, program in enumerate(programs, start=1)]
     programs.append("Главное меню")
@@ -46,16 +47,16 @@ def programs_block(update):
 def performance_block(update, schedules, context):
     performances = []
     for perforamnce_id, performance in enumerate(schedules, start=1):
-        performance_name = performance["performance_name"]
-        performance_time = performance["time"]
-        performance = f'{perforamnce_id}.{performance_name}\n' \
-                      f'Время: {performance_time}\n'
+        performance_name = performance.performance_name
+        performance_time = performance.time_performance
+        performance = f'{perforamnce_id}. {performance_name}\n' \
+                      f'Время: {performance_time}\n\n'
         performances.append(performance)
-    text = f"У программы {context.user_data['performance']} " \
+    text = f"У программы «{context.user_data['performance']}» " \
            f"будут следующие выступления:\n\n" \
            f"{''.join(performances)}\n" \
            f"Про какое выступление вам бы хотелось узнать побольше?"
-    performances = [performance["performance_name"] for performance in
+    performances = [performance.performance_name for performance in
                     schedules]
     performances.append("Назад")
 

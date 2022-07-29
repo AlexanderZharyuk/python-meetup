@@ -4,6 +4,7 @@ import os
 from enum import Enum
 
 import django
+
 from more_itertools import chunked
 
 from dotenv import load_dotenv
@@ -39,8 +40,7 @@ class ConversationPoints(Enum):
 
 
 def setup_admin_panel() -> None:
-    os.environ.setdefault("DJANGO_SETTINGS_MODULE",
-                          "admin_panel.Meetup.settings")
+    os.environ["DJANGO_SETTINGS_MODULE"] = 'bot_settings'
     django.setup()
 
 
@@ -56,26 +56,16 @@ def program(update: Update, context: CallbackContext) -> int:
 
 def schedules(update: Update, context: CallbackContext) -> int:
     user_choice = update.message.text
-    schedules = [
-        {
-            "time": "09:00",
-            "performance_name": "Регистрация"
-        },
-        {
-            "time": "10:00",
-            "performance_name": "Первое выступление"
-        },
-        {
-            "time": "10:30",
-            "performance_name": "Второе выступление"
-        },
-    ]
 
     if user_choice == "Главное меню":
         start_block(update=update)
         return ConversationPoints.MENU.value
 
     if user_choice == "Назад":
+        from admin_panel.Conference.models import Performance
+        schedules = Performance.objects.filter(
+            conference__name_conf=context.user_data["performance"]
+        )
         performances, text = performance_block(update, schedules, context)
 
         reply_keyboard = list(chunked(performances, 2))
@@ -89,20 +79,25 @@ def schedules(update: Update, context: CallbackContext) -> int:
         )
         return ConversationPoints.PROGRAM_DESCRIPTION.value
 
+    from admin_panel.Conference.models import Performance
     performances = []
-    for perforamnce_id, performance in enumerate(schedules, start=1):
-        performance_name = performance["performance_name"]
-        performance_time = performance["time"]
-        performance = f'{perforamnce_id}.{performance_name}\n' \
-                      f'Время: {performance_time}\n'
+    performances_in_conference = Performance.objects.filter(
+        conference__name_conf=user_choice
+    )
+    for perforamnce_id, performance in enumerate(performances_in_conference,
+                                                 start=1):
+        performance_name = performance.performance_name
+        performance_time = performance.time_performance
+        performance = f'{perforamnce_id}. {performance_name}\n' \
+                      f'Время: {performance_time}\n\n'
         performances.append(performance)
 
-    text = f"У программы {user_choice} будут следующие выступления:\n\n" \
+    text = f"У программы «{user_choice}» будут следующие выступления:\n\n" \
            f"{''.join(performances)}\n" \
            f"Про какое выступление вам бы хотелось узнать побольше?"
 
-    performances = [performance["performance_name"] for performance in
-                    schedules]
+    performances = [performance.performance_name for performance in
+                    performances_in_conference]
     performances.append("Назад")
 
     reply_keyboard = list(chunked(performances, 2))
@@ -122,27 +117,15 @@ def get_program_description(update: Update, context: CallbackContext) -> int:
     user_choice = update.message.text
 
     if user_choice == "Назад":
-        programs = [f'Программа №{program}' for program in range(1, 4)]
-        programs_text = [f"{program_number}. {program}\n" for
-                         program_number, program in
-                         enumerate(programs, start=1)]
-        programs.append("Главное меню")
-
-        update.message.reply_text(
-            'Сегодня у нас проходят следующие программы:\n\n'
-            f'{"".join(programs_text)}\n\n'
-            f'Какая программа вас заинтересовала?',
-            reply_markup=ReplyKeyboardMarkup(
-                keyboard=list(chunked(programs, 2)),
-                one_time_keyboard=True,
-                resize_keyboard=True
-            ),
-        )
+        programs_block(update=update)
         return ConversationPoints.PROGRAM_SCHEDULE.value
 
+    from admin_panel.Conference.models import Performance
     reply_keyboard = [["Главное меню", "Назад"]]
+    performance = Performance.objects.get(performance_name=user_choice)
     update.message.reply_text(
-        f"Описание программы {user_choice}",
+        f"Описание программы: {performance.description}\n\n"
+        f"Спикер программы: {performance.speaker}",
         reply_markup=ReplyKeyboardMarkup(
             reply_keyboard,
             one_time_keyboard=True,
@@ -153,7 +136,9 @@ def get_program_description(update: Update, context: CallbackContext) -> int:
 
 
 def question_for_speaker(update: Update, context: CallbackContext) -> int:
-    programs = [f'Программа №{program}' for program in range(1, 4)]
+    from admin_panel.Conference.models import Conference
+    programs = [conference.name_conf for conference in
+                Conference.objects.all()]
     programs.append("Главное меню")
 
     update.message.reply_text(
@@ -168,13 +153,21 @@ def question_for_speaker(update: Update, context: CallbackContext) -> int:
 
 
 def get_performance_times(update: Update, context: CallbackContext) -> int:
-    reply_keyboard = [["12:00", "14:00"]]
+    from admin_panel.Conference.models import Conference
+    conferences = Conference.objects.filter(
+        name_conf=update.message.text
+    )
+    for conference in conferences:
+        performances = conference.performances.all()
+
+    reply_keyboard = [str(performance.time_performance) for performance
+                      in performances]
     context.user_data["performance"] = update.message.text
 
     update.message.reply_text(
         "Когда было выступление?",
          reply_markup=ReplyKeyboardMarkup(
-             keyboard=reply_keyboard,
+             keyboard=list(chunked(reply_keyboard, 2)),
              one_time_keyboard=True,
              resize_keyboard=True
          )
@@ -184,12 +177,17 @@ def get_performance_times(update: Update, context: CallbackContext) -> int:
 
 def get_performance_speakers(update: Update, context: CallbackContext) -> int:
     context.user_data["time"] = update.message.text
-    speakers = [f"{speaker_number}. Выступающий #{speaker_number}\n" for speaker_number in range(1, 5)]
+    from admin_panel.Conference.models import Performance
+    performances = Performance.objects.filter(
+        time_performance=context.user_data['time']
+    )
+
+    speakers = [str(performance.speaker) for performance in performances]
     reply_keyboard = list(chunked(speakers, 1))
     reply_keyboard.append(["Назад"])
     update.message.reply_text(
-        text=f"На программе {context.user_data['performance']} в "
-             f"{context.user_data['time']} выступали:\n\n",
+        text=f"На программе «{context.user_data['performance']}» в "
+             f"{context.user_data['time']} выступал:\n\n",
         reply_markup=ReplyKeyboardMarkup(
              keyboard=reply_keyboard,
              one_time_keyboard=True,
@@ -201,7 +199,9 @@ def get_performance_speakers(update: Update, context: CallbackContext) -> int:
 
 def question(update: Update, context: CallbackContext) -> int:
     if update.message.text == "Назад":
-        programs = [f'Программа №{program}' for program in range(1, 4)]
+        from admin_panel.Conference.models import Conference
+        programs = [conference.name_conf for conference in
+                    Conference.objects.all()]
         programs.append("Главное меню")
 
         update.message.reply_text(
@@ -231,9 +231,6 @@ def cancel(update: Update, context: CallbackContext) -> int:
 
 def main() -> None:
     load_dotenv()
-    setup_admin_panel()
-    from admin_panel.Conference.models import Speaker, Performance
-
 
     telegram_bot_token = os.environ['TELEGRAM_BOT_TOKEN']
     updater = Updater(telegram_bot_token)
@@ -310,4 +307,6 @@ def main() -> None:
 
 
 if __name__ == '__main__':
+    setup_admin_panel()
+    from admin_panel.Conference.models import Performance, Conference, Speaker
     main()
