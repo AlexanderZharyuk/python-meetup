@@ -1,8 +1,9 @@
 import logging
 import os
-from more_itertools import chunked
 
 from enum import Enum
+
+from more_itertools import chunked
 
 from dotenv import load_dotenv
 from telegram import ReplyKeyboardMarkup, ReplyKeyboardRemove, Update
@@ -16,7 +17,6 @@ from telegram.ext import (
 )
 
 from menu_blocks import start_block, programs_block, performance_block
-
 
 logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
