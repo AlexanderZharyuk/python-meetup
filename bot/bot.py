@@ -22,7 +22,11 @@ from orm_commands import (
     get_performance,
     get_programs_list,
     get_performances_in_conference,
-    get_performance_by_time
+    get_performance_by_time,
+    get_speaker_telegram_id,
+    save_question,
+    get_user_answer_id,
+    get_speakers_ids
 )
 
 logging.basicConfig(
@@ -42,6 +46,7 @@ class ConversationPoints(Enum):
     PERFORMANCE_SPEAKERS = 5
     CHOOSE_PERFORMANCE_SPEAKER = 6
     QUESTION_FOR_SPEAKER = 7
+    SEND_QUESTION_TO_SPEAKER = 8
 
 
 def start(update: Update, context: CallbackContext) -> int:
@@ -157,7 +162,10 @@ def get_performance_times(update: Update, context: CallbackContext) -> int:
 
 def get_performance_speakers(update: Update, context: CallbackContext) -> int:
     context.user_data["time"] = update.message.text
-    performance = get_performance_by_time(time=context.user_data['time'])
+    performance = get_performance_by_time(
+        time=context.user_data['time'],
+        performance_name=context.user_data["performance"]
+    )
     speaker = performance.speaker.fullname
     reply_keyboard = [[speaker], ["Назад"]]
     update.message.reply_text(
@@ -190,7 +198,50 @@ def question(update: Update, context: CallbackContext) -> int:
     update.message.reply_text(
         text=f"Задайте свой вопрос:"
     )
+    context.user_data["speaker"] = update.message.text
+    return ConversationPoints.SEND_QUESTION_TO_SPEAKER.value
+
+
+def forward_to_speaker(update: Update, context: CallbackContext):
+    speaker_chat_id = get_speaker_telegram_id(
+        speaker_fullname=context.user_data["speaker"]
+    )
+    update.message.forward(chat_id=speaker_chat_id)
+    user_id = update.message.from_user.id
+    question = update.message.text
+
+    save_question(
+        by_user=user_id,
+        question=question,
+        speaker_id=speaker_chat_id
+    )
+
     return ConversationHandler.END
+
+
+def forward_to_user(update: Update, context: CallbackContext):
+    # Если в это состояние бота входит не спикер - функция не срабатывает
+    speaker_id = update.effective_user.id
+    speakers_ids = get_speakers_ids()
+    if speaker_id not in speakers_ids:
+        return None
+
+    question_text = update.message.reply_to_message.text
+
+    if update.message.reply_to_message.forward_from:
+        user_id = update.message.reply_to_message.forward_from.id
+    else:
+        answer_id = get_user_answer_id(
+            speaker_id=speaker_id,
+            question_text=question_text
+        )
+        user_id = answer_id
+
+    context.bot.copy_message(
+        message_id=update.message.message_id,
+        chat_id=user_id,
+        from_chat_id=update.message.chat_id
+    )
 
 
 def cancel(update: Update, context: CallbackContext) -> int:
@@ -269,11 +320,23 @@ def main() -> None:
                     question
                 ),
             ],
+            ConversationPoints.SEND_QUESTION_TO_SPEAKER.value: [
+                MessageHandler(
+                    Filters.chat_type.private,
+                    forward_to_speaker
+                ),
+            ],
         },
         fallbacks=[CommandHandler('cancel', cancel)],
     )
 
     dispatcher.add_handler(conv_handler)
+    dispatcher.add_handler(
+        MessageHandler(
+            Filters.reply,
+            forward_to_user
+        )
+    )
 
     updater.start_polling()
     updater.idle()
