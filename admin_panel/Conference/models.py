@@ -3,7 +3,7 @@ from django.db import models
 
 # Create your models here.
 class Speaker(models.Model):
-    tg_speaker_id = models.IntegerField(
+    telegram_id = models.IntegerField(
         verbose_name='Телеграм-ID докладчика'
     )
     fullname = models.CharField(
@@ -26,7 +26,7 @@ class Speaker(models.Model):
 
 
 class Conference(models.Model):
-    name_conf = models.CharField(
+    name = models.CharField(
         max_length=500,
         help_text='Название конференции',
         verbose_name='Название конференции',
@@ -37,7 +37,7 @@ class Conference(models.Model):
     )
 
     def __str__(self):
-        return f'{self.name_conf}'
+        return f'{self.name}'
 
     class Meta:
         verbose_name = 'конференцию'
@@ -45,7 +45,7 @@ class Conference(models.Model):
 
 
 class Performance(models.Model):
-    performance_name = models.CharField(
+    name = models.CharField(
         max_length=100,
         verbose_name='Название выступления'
     )
@@ -53,7 +53,7 @@ class Performance(models.Model):
         max_length=5000,
         verbose_name='Описание выступления'
     )
-    time_performance = models.TimeField(
+    time = models.TimeField(
         help_text='Введите время выступления',
         verbose_name='Время выступления',
     )
@@ -73,7 +73,7 @@ class Performance(models.Model):
     )
 
     def __str__(self):
-        return f"{self.performance_name}"
+        return f"{self.name}"
 
     class Meta:
         verbose_name = 'выступление'
@@ -81,7 +81,7 @@ class Performance(models.Model):
 
 
 class Question(models.Model):
-    tg_user_id = models.IntegerField(
+    telegram_user_id = models.IntegerField(
         verbose_name='Телеграм-ID задающего вопрос'
     )
     speaker = models.ForeignKey(

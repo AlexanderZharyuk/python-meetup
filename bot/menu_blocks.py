@@ -42,8 +42,8 @@ def performance_block(performances_list, context,
     performances = []
     for perforamnce_id, performance in enumerate(performances_list,
                                                  start=1):
-        performance_name = performance.performance_name
-        performance_time = performance.time_performance
+        performance_name = performance.name
+        performance_time = performance.time
         performance = f'{perforamnce_id}. {performance_name}\n' \
                       f'Время: {performance_time}\n\n'
         performances.append(performance)
@@ -58,7 +58,7 @@ def performance_block(performances_list, context,
                f"{''.join(performances)}\n" \
                f"Про какое выступление вам бы хотелось узнать побольше?"
 
-    performances = [performance.performance_name for performance in
+    performances = [performance.name for performance in
                     performances_list]
     performances.append("Назад")
 

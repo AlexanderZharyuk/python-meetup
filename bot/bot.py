@@ -145,7 +145,7 @@ def question_for_speaker(update: Update, context: CallbackContext) -> int:
 
 def get_performance_times(update: Update, context: CallbackContext) -> int:
     performances = get_performances_in_conference(update=update)
-    reply_keyboard = [str(performance.time_performance) for performance
+    reply_keyboard = [str(performance.time) for performance
                       in performances]
     context.user_data["performance"] = update.message.text
 
