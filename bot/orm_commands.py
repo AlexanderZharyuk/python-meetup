@@ -1,5 +1,11 @@
 import os
 
+import sys
+
+from os.path import dirname, abspath
+
+sys.path.append(dirname(dirname(abspath(__file__))))
+
 import django
 
 from telegram import Update
