@@ -1,55 +1,55 @@
-# PYTHON MEETUP
-Проект создан для управления выступлениями на конференции посредством телеграм-бота.
+#PYTHON MEETUP
+The project was created to manage speeches at the conference through a telegram bot.
 
-В боте есть веб-админка для более удобного управления и работой с БД.
+The bot has a web admin panel for more convenient management and work with the database.
 
-## Начало работы
-Для начала работы необходимо установить зависимости и библиотеки:
+## Setting up your development environment
+To get started, you need to install dependencies and libraries:
 ```shell
 pip install -r requirements.txt
 ```
 
-После чего создать `.env`-файл с переменными окружения:
+Then create a `.env` file with environment variables:
 ```
-TELEGRAM_BOT_TOKEN=<Токен вашего телеграм-бота>
-DJANGO_SECRET_KEY=<Секретный ключ вашего Django-проекта>
+TELEGRAM_BOT_TOKEN=<Token of your telegram bot>
+DJANGO_SECRET_KEY=<Your Django project's secret key>
 ```
 
-## Настройка админ-панели
-Для работы с админкой, нужно сначала ее настроить, для этого сделайте следующее:
+## Setting up the admin panel
+To work with the admin panel, you must first configure it, to do this, do the following:
 
 
-1. Создание БД
+1. Database creation
 ```shell
 python3 admin_panel/manage.py migrate
 ```
-2. Создайте аккаунт в админке:
+2. Create an account in the admin panel:
 ```shell
 python3 admin_panel/manage.py createsuperuser
 ```
-Далее в консоли вас попросят вести ваши данные для входа.
+Next, in the console you will be asked to enter your login information.
 
-3. Запуск веб-админки:
+3. Launching the web admin:
 ```shell
 python3 admin_panel/manage.py runserver
 ```
 
-После прохождения всех шагов, админка должна запуститься на вашем локальном хосте по адресу [http://127.0.0.1:8000/admin/](http://127.0.0.1:8000/admin/)
+After going through all the steps, the admin panel should start on your local host at [http://127.0.0.1:8000/admin/](http://127.0.0.1:8000/admin/)
 
-## Работа в админ-панели
-После успешного входа вы увидите возможность создания в БД выступающего, выступления и конференции, на которой будет выступление.
+## Work in the admin panel
+After a successful login, you will see the possibility of creating a speaker, a speech and a conference in which the speech will be in the database.
 
-Админка интуитивно понятная, все, что вы заведете в админ-панели будет выводиться для справочной информации в телеграм-боте.
+The admin panel is intuitive, everything that you enter in the admin panel will be displayed for reference in the telegram bot.
 
-## Телеграм-бот
-Для запуска телеграм-бота, используйте команду:
+## Telegram bot
+To start the telegram bot, use the command:
 ```shell
 python3 bot/bot.py
 ```
 
-В телеграм-боте у вас есть две ветки - «Программа» и «Задать вопрос спикеру».
+In the telegram bot, you have two branches - "Program" and "Ask a question to the speaker".
 
-Первая ветка информативная - для понимания, что будет сегодня в программе, вторая - для вопросов спикеру, на которые он потом отвечает посредством бота.
+The first branch is informative - for understanding what will be in the program today, the second - for questions to the speaker, to which he then answers through the bot.
 
-## Автор
+## Author
 - [Alexander Zharyuk](https://github.com/AlexanderZharyuk/)
