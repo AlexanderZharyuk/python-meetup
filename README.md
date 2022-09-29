@@ -1,4 +1,4 @@
-#PYTHON MEETUP
+# PYTHON MEETUP
 The project was created to manage speeches at the conference through a telegram bot.
 
 The bot has a web admin panel for more convenient management and work with the database.
